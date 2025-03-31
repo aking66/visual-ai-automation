@@ -1,137 +1,134 @@
-# Visual AI Automation Workflow Builder
+# 🤖🧠 Visual AI Automation Workflow Builder
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.1.0--alpha.1-orange)](https://github.com/yourusername/visual-ai-automation)
-[![Tests](https://github.com/yourusername/visual-ai-automation/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/yourusername/visual-ai-automation/actions)
+A powerful, N8N-inspired visual workflow builder for AI auto
+mations using Streamlit and LangGraph.
 
-## 🤖 Overview
+![Visual AI Automation Builder](https://img.shields.io/badge/AI-Automation-blue) ![LangGraph](https://img.shields.io/badge/LangGraph-Powered-green) ![Streamlit](https://img.shields.io/badge/Streamlit-App-red)
 
-Visual AI Automation Workflow Builder is an application that enables creating AI-powered automated workflows through a graphical interface. It allows you to create complex workflows with multiple flows and branches, where each node processes inputs using artificial intelligence models.
+## 📋 Overview
 
-## 🔑 Key Features
+The Visual AI Automation Workflow Builder is a sophisticated application that allows you to create, visualize, and execute complex AI-powered automation workflows through an intuitive graphical interface. Built on Streamlit and LangGraph, it enables non-developers to design multi-step AI processes with conditional branching, web search capabilities, and visual flow control.
 
-- **Visual User Interface** - Design workflows through a drag-and-drop graphical interface
-- **AI Nodes** - Utilize Google Gemini model for intelligent text processing
-- **Conditional Routing Rules** - Define paths and branches for next steps based on previous node results
-- **Web Search** - Ability to use web search system to obtain updated information
-- **Ready-made Workflow Templates** - Several pre-configured templates for different purposes like sentiment analysis, classification, and deep research
+## ✨ Features
 
-## 🏗️ Project Structure
+- **Visual Node-Based Editor**: Create workflows by connecting nodes with an intuitive graph interface
+- **Conditional Routing**: Design complex decision trees with rule-based routing between nodes
+- **Web Search Integration**: Nodes can access the web to retrieve up-to-date information
+- **Pre-Built Templates**: Several example workflows included (Summarizer, Sentiment Analysis, Classification, Research, Investment Analysis)
+- **Live Execution**: Run workflows and see real-time execution logs
+- **Dynamic Visualization**: Interactive graph display using streamlit-agraph
+- **OpenAI GPT-4o Integration**: Powered by advanced language models for intelligent processing
 
-```
-.
-├── README.md               # This file
-├── CHANGELOG.md            # Change log
-├── run.py                  # Main application execution file
-└── src/                    # Source code
-   ├── __init__.py
-   ├── config/             # Configurations and constants
-   ├── core/               # Core business logic
-   ├── models/             # Data model definitions
-   ├── ui/                 # User interface components
-   ├── utils/              # Helper tools
-   └── workflows/          # Ready-made workflow templates
-```
+## 🛠️ Installation
 
-## 📋 Requirements
+### Prerequisites
 
 - Python 3.8+
-- streamlit
-- langgraph
-- langchain-google-genai
-- google-generativeai
-- streamlit-agraph (for graph visualization)
-- **New in Version 1.1.0**: Support for Anthropic and Cohere models
+- OpenAI API Key
 
-## ⚙️ Installation and Setup
+### Setup
 
-1. **Install the requirements**:
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/visual-ai-automation-builder.git
+   cd visual-ai-automation-builder
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+2. Install required dependencies:
+   ```
+   pip install streamlit streamlit-agraph langchain-openai langgraph typing-extensions regex langchain-core
+   ```
 
-2. **Get API keys**:
-   - Register for a Google Gemini API key from [Google AI Studio](https://ai.google.dev/)
-   - Optional: To take advantage of multi-model support in version 1.1.0:
-    - Register for an Anthropic Claude API key from [Anthropic Console](https://console.anthropic.com/)
-    - Register for a Cohere API key from [Cohere Dashboard](https://dashboard.cohere.com/)
-   - Copy the `.env.example` file to `.env` and add your API keys
+3. (Optional) Set your OpenAI API key as an environment variable:
+   ```
+   export OPENAI_API_KEY='your-api-key'
+   ```
 
-3. **Run the application**:
+## 🚀 Usage
 
-```bash
-streamlit run run.py
-```
+1. Run the application:
+   ```
+   streamlit run run.py
+   ```
 
-Or use the included script:
+2. Access the UI in your browser (typically http://localhost:8501)
 
-```bash
-./start.sh
-```
+3. Input your OpenAI API key in the sidebar if not set as an environment variable
 
-## 🚀 How to Use
+4. Create a workflow:
+   - Add nodes using the Node Palette
+   - Configure each node's prompt and routing rules
+   - Connect nodes together by setting up conditional targets
+   - Compile the workflow
+   - Execute with your input text
 
-1. **Add Nodes**:
-   - Use the "Node Palette" in the sidebar to add new nodes
-   - Or select one of the ready-made workflow templates to start
+## 📊 Example Workflows
 
-2. **Configure Nodes**:
-   - Select a node to edit in the "Node Configuration" section
-   - Modify the name, model prompt text, and routing rules
+The application comes with several pre-built example workflows:
 
-3. **Compile the Workflow**:
-   - After configuring all nodes, click on "Compile Workflow" in the sidebar
+### 📄 Simple Summarizer
+A basic workflow that condenses text into 1-2 concise sentences.
 
-4. **Execute the Workflow**:
-   - Enter the initial message in the "Execute Workflow" area
-   - Click "Run Workflow" to start execution
-   - View results in the "Execution Results" area
+### 🎭 Sentiment Analysis
+Analyzes input text for sentiment and responds accordingly with different paths for positive, negative, and neutral sentiments.
 
-## 📝 Available Workflow Templates
+### 🏷️ Classification
+Classifies user input into different categories (complaint, query, compliment) and handles each appropriately.
 
-- **Summarizer** - Simple model for text summarization
-- **Sentiment** - Sentiment analysis with different paths for positive, negative, and neutral responses
-- **Classify** - Classification of user intent and extraction of important information
-- **Deep Research** - Conduct in-depth multi-angle research with cross-verification
-- **Advanced Hedge Fund** - Advanced investment analysis with macroeconomic, sector, and company analysis
+### 🔬 Deep Research
+A multi-stage research workflow that breaks research into angles, investigates each independently, cross-references findings, synthesizes results, and generates a final report.
 
-## 🧪 Testing
+### 📈 Enhanced Hedge Fund
+A sophisticated investment workflow that analyzes goals and risk profiles, researches macro conditions, sectors and companies, validates findings, and provides tailored portfolio strategies.
 
-The project includes a comprehensive suite of tests to validate core components:
+## 💡 Creating Your Own Workflow
 
-```bash
-pytest --cov=src tests/
-```
+1. Add a node using the "Add LLM Node" button in the sidebar
+2. Configure the node's prompt (use `{input_text}` as a placeholder for incoming data)
+3. Set up routing rules to determine the flow based on the node's output
+4. Add additional nodes and connect them
+5. Compile the workflow when finished
+6. Execute with your initial input
 
-## 🚀 How to Run a Local Version
+## ⚙️ Node Configuration
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/visual-ai-automation.git
-cd visual-ai-automation
+Each node has the following properties:
 
-# Install requirements
-pip install -r requirements.txt
+- **Name**: Identifies the node in the workflow
+- **Prompt**: Instructions for the LLM to process
+- **Routing Rules**: 
+  - Default Target: Where to send output if no conditional rules match
+  - Conditional Targets: Rules that route to different nodes based on specific outputs
 
-# Set up environment file
-cp .env.example .env
-# Edit the .env file to add your API keys
+Nodes automatically append a routing key to their responses (e.g., `ROUTING_KEY: done`), which determines the next node in the flow.
 
-# Run the application
-streamlit run run.py
-```
+## 🔄 Workflow Execution
+
+The application follows these steps during execution:
+
+1. Starts at the first node with the user's input text
+2. Processes the text through the LLM according to the node's prompt
+3. Extracts a routing key from the LLM's response
+4. Follows the appropriate path based on routing rules
+5. Continues until reaching an END node
+6. Displays the final output and execution log
+
+## 🔍 Technical Details
+
+- **State Management**: Uses dictionary-based state tracking via TypedDict
+- **Graph Visualization**: Implemented with streamlit-agraph
+- **LLM Integration**: Uses OpenAI's GPT-4o with tool binding for web search
+- **Routing System**: Conditional paths based on extracted routing keys
+- **Content Extraction**: Robust parsing of LLM responses for consistent results
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions welcome! Feel free to submit issues or pull requests.
 
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 📜 License
 
-## 📄 License
+MIT License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📱 Subscribe
+
+Created by [Deep Charts](https://www.youtube.com/@DeepCharts). Subscribe for more AI tools and tutorials.
