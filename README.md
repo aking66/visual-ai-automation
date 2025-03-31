@@ -4,134 +4,134 @@
 [![Version](https://img.shields.io/badge/Version-1.1.0--alpha.1-orange)](https://github.com/yourusername/visual-ai-automation)
 [![Tests](https://github.com/yourusername/visual-ai-automation/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/yourusername/visual-ai-automation/actions)
 
-## 🤖 نظرة عامة
+## 🤖 Overview
 
-Visual AI Automation Workflow Builder هو تطبيق يتيح إنشاء سير العمل الآلي المعتمد على الذكاء الاصطناعي بواجهة رسومية. يسمح لك بإنشاء سير عمل (workflows) معقدة مع تدفق وتفرعات متعددة، حيث تعمل كل عقدة على معالجة المدخلات باستخدام نماذج الذكاء الاصطناعي.
+Visual AI Automation Workflow Builder is an application that enables creating AI-powered automated workflows through a graphical interface. It allows you to create complex workflows with multiple flows and branches, where each node processes inputs using artificial intelligence models.
 
-## 🔑 الميزات الرئيسية
+## 🔑 Key Features
 
-- **واجهة مستخدم مرئية** - تصميم سير العمل من خلال واجهة رسومية بالسحب والإفلات
-- **عقد الذكاء الاصطناعي** - استخدام نموذج Google Gemini للمعالجة الذكية للنصوص
-- **قواعد التوجيه المشروطة** - تحديد مسارات وتفرعات الخطوات التالية بناءً على نتائج العقد السابقة
-- **البحث عن الويب** - إمكانية استخدام نظام البحث عن الويب للحصول على معلومات محدثة
-- **نماذج سير عمل جاهزة** - عدة نماذج معدة مسبقًا لأغراض مختلفة مثل تحليل المشاعر والتصنيف والبحث العميق
+- **Visual User Interface** - Design workflows through a drag-and-drop graphical interface
+- **AI Nodes** - Utilize Google Gemini model for intelligent text processing
+- **Conditional Routing Rules** - Define paths and branches for next steps based on previous node results
+- **Web Search** - Ability to use web search system to obtain updated information
+- **Ready-made Workflow Templates** - Several pre-configured templates for different purposes like sentiment analysis, classification, and deep research
 
-## 🏗️ بنية المشروع
+## 🏗️ Project Structure
 
 ```
 .
-├── README.md               # هذا الملف
-├── CHANGELOG.md            # سجل التغييرات
-├── run.py                  # ملف تشغيل التطبيق الرئيسي
-└── src/                    # كود المصدر
-    ├── __init__.py
-    ├── config/             # تكوينات وثوابت
-    ├── core/               # منطق الأعمال الأساسي
-    ├── models/             # تعريفات نماذج البيانات
-    ├── ui/                 # مكونات واجهة المستخدم
-    ├── utils/              # أدوات مساعدة
-    └── workflows/          # نماذج سير العمل الجاهزة
+├── README.md               # This file
+├── CHANGELOG.md            # Change log
+├── run.py                  # Main application execution file
+└── src/                    # Source code
+   ├── __init__.py
+   ├── config/             # Configurations and constants
+   ├── core/               # Core business logic
+   ├── models/             # Data model definitions
+   ├── ui/                 # User interface components
+   ├── utils/              # Helper tools
+   └── workflows/          # Ready-made workflow templates
 ```
 
-## 📋 المتطلبات
+## 📋 Requirements
 
 - Python 3.8+
 - streamlit
 - langgraph
 - langchain-google-genai
 - google-generativeai
-- streamlit-agraph (لعرض الرسم البياني)
-- **جديد في الإصدار 1.1.0**: دعم لنماذج Anthropic و Cohere
+- streamlit-agraph (for graph visualization)
+- **New in Version 1.1.0**: Support for Anthropic and Cohere models
 
-## ⚙️ التثبيت والإعداد
+## ⚙️ Installation and Setup
 
-1. **قم بتثبيت المتطلبات**:
+1. **Install the requirements**:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **احصل على مفاتيح API**:
-   - سجل للحصول على مفتاح API لـ Google Gemini من [Google AI Studio](https://ai.google.dev/)
-   - اختياري: للاستفادة من الدعم متعدد النماذج في الإصدار 1.1.0:
-     - سجل للحصول على مفتاح API لـ Anthropic Claude من [Anthropic Console](https://console.anthropic.com/)
-     - سجل للحصول على مفتاح API لـ Cohere من [Cohere Dashboard](https://dashboard.cohere.com/)
-   - قم بنسخ ملف `.env.example` إلى `.env` وأضف مفاتيح API الخاصة بك
+2. **Get API keys**:
+   - Register for a Google Gemini API key from [Google AI Studio](https://ai.google.dev/)
+   - Optional: To take advantage of multi-model support in version 1.1.0:
+    - Register for an Anthropic Claude API key from [Anthropic Console](https://console.anthropic.com/)
+    - Register for a Cohere API key from [Cohere Dashboard](https://dashboard.cohere.com/)
+   - Copy the `.env.example` file to `.env` and add your API keys
 
-3. **قم بتشغيل التطبيق**:
+3. **Run the application**:
 
 ```bash
 streamlit run run.py
 ```
 
-أو استخدم السكريبت المرفق:
+Or use the included script:
 
 ```bash
 ./start.sh
 ```
 
-## 🚀 كيفية الاستخدام
+## 🚀 How to Use
 
-1. **إضافة العقد**:
-   - استخدم "Node Palette" في الشريط الجانبي لإضافة عقد جديدة
-   - أو اختر أحد نماذج سير العمل الجاهزة للبدء
+1. **Add Nodes**:
+   - Use the "Node Palette" in the sidebar to add new nodes
+   - Or select one of the ready-made workflow templates to start
 
-2. **تكوين العقد**:
-   - حدد عقدة لتعديلها في جزء "Node Configuration"
-   - قم بتعديل الاسم والنص التحفيزي للنموذج وقواعد التوجيه
+2. **Configure Nodes**:
+   - Select a node to edit in the "Node Configuration" section
+   - Modify the name, model prompt text, and routing rules
 
-3. **تجميع سير العمل**:
-   - بعد تكوين جميع العقد، انقر على "Compile Workflow" في الشريط الجانبي
+3. **Compile the Workflow**:
+   - After configuring all nodes, click on "Compile Workflow" in the sidebar
 
-4. **تنفيذ سير العمل**:
-   - أدخل الرسالة الأولية في منطقة "Execute Workflow"
-   - انقر على "Run Workflow" لبدء التنفيذ
-   - شاهد النتائج في منطقة "Execution Results"
+4. **Execute the Workflow**:
+   - Enter the initial message in the "Execute Workflow" area
+   - Click "Run Workflow" to start execution
+   - View results in the "Execution Results" area
 
-## 📝 نماذج سير العمل المتوفرة
+## 📝 Available Workflow Templates
 
-- **Summarizer** - نموذج بسيط لتلخيص النصوص
-- **Sentiment** - تحليل المشاعر مع مسارات مختلفة للردود الإيجابية والسلبية والمحايدة
-- **Classify** - تصنيف نية المستخدم واستخراج المعلومات الهامة
-- **Deep Research** - إجراء بحث معمق متعدد الزوايا مع التحقق المتبادل
-- **Advanced Hedge Fund** - تحليل استثماري متقدم مع تحليل الاقتصاد الكلي والقطاعات والشركات
+- **Summarizer** - Simple model for text summarization
+- **Sentiment** - Sentiment analysis with different paths for positive, negative, and neutral responses
+- **Classify** - Classification of user intent and extraction of important information
+- **Deep Research** - Conduct in-depth multi-angle research with cross-verification
+- **Advanced Hedge Fund** - Advanced investment analysis with macroeconomic, sector, and company analysis
 
-## 🧪 الاختبارات
+## 🧪 Testing
 
-يحتوي المشروع على مجموعة شاملة من الاختبارات للتحقق من صحة المكونات الأساسية:
+The project includes a comprehensive suite of tests to validate core components:
 
 ```bash
 pytest --cov=src tests/
 ```
 
-## 🚀 كيفية تنفيذ نسخة محلية
+## 🚀 How to Run a Local Version
 
 ```bash
-# استنساخ المستودع
+# Clone the repository
 git clone https://github.com/yourusername/visual-ai-automation.git
 cd visual-ai-automation
 
-# تثبيت المتطلبات
+# Install requirements
 pip install -r requirements.txt
 
-# إعداد ملف البيئة
+# Set up environment file
 cp .env.example .env
-# قم بتحرير ملف .env لإضافة مفاتيح API الخاصة بك
+# Edit the .env file to add your API keys
 
-# تشغيل التطبيق
+# Run the application
 streamlit run run.py
 ```
 
-## 🤝 المساهمة
+## 🤝 Contributing
 
-نرحب بالمساهمات! الرجاء اتباع هذه الخطوات:
+Contributions are welcome! Please follow these steps:
 
-1. قم بتنفيذ fork للمشروع
-2. قم بإنشاء فرع الميزة (`git checkout -b feature/amazing-feature`)
-3. قم بالالتزام بالتغييرات (`git commit -m 'Add some amazing feature'`)
-4. قم بدفع التغييرات إلى الفرع (`git push origin feature/amazing-feature`)
-5. قم بفتح طلب سحب (Pull Request)
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 الترخيص
+## 📄 License
 
-هذا المشروع مرخص بموجب ترخيص MIT - راجع ملف LICENSE للتفاصيل.
+This project is licensed under the MIT License - see the LICENSE file for details.
