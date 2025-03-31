@@ -1,167 +1,77 @@
 # -*- coding: utf-8 -*-
 """
-LLM initialization and management for the Visual AI Automation Workflow Builder
+LLM initialization module for the Visual AI Automation Workflow Builder
+
+This module handles the initialization and configuration of Language Models
+used for processing nodes in the workflow. It currently supports Google's
+Gemini model and provides functions to verify API key availability.
 """
 
 import os
+from typing import Dict, Any, Optional
+
 import streamlit as st
-from typing import Optional, Any, Dict, Tuple, Literal
+from langchain_core.language_models.base import BaseLanguageModel
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_anthropic import ChatAnthropic
-from langchain_cohere import ChatCohere
+from src.config.constants import WEB_SEARCH_TOOL_DICT
 
-from src.config.constants import TOOLS_LIST_FOR_BINDING, DEFAULT_MODEL, DEFAULT_TEMPERATURE
-
-# Global LLM variables
-llm: Optional[Any] = None
-llm_with_search: Optional[Any] = None
-current_provider: str = "google"
-
-# Model mapping by provider
-MODEL_MAPPING = {
-    "google": {
-        "default": "gemini-1.5-pro",
-        "alternatives": ["gemini-1.5-flash", "gemini-pro"]
-    },
-    "anthropic": {
-        "default": "claude-3-opus-20240229", 
-        "alternatives": ["claude-3-sonnet-20240229", "claude-3-haiku-20240307"]
-    },
-    "cohere": {
-        "default": "command-r-plus",
-        "alternatives": ["command-r", "command"]
-    }
-}
-
-def initialize_llm(provider: str = "google") -> bool:
+def initialize_llm() -> bool:
     """
-    Initialize LLM with API key from environment
+    Initialize the LLM instances for workflow processing
     
-    Args:
-        provider: The LLM provider to use ("google", "anthropic", or "cohere")
+    This function:
+    1. Verifies that the Google API key is available
+    2. Initializes the LLM instances with appropriate settings
+    3. Caches the LLM instances in session state
     
     Returns:
-        bool: True if LLM was successfully initialized
+        bool: True if initialization was successful, False otherwise
     """
-    global llm, llm_with_search, current_provider
-    
-    # Get API keys
-    google_api_key = os.environ.get("GOOGLE_API_KEY")
-    anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
-    cohere_api_key = os.environ.get("COHERE_API_KEY")
-    
-    # Check if requested provider is available
-    provider_keys = {
-        "google": google_api_key,
-        "anthropic": anthropic_api_key,
-        "cohere": cohere_api_key
-    }
-    
-    if not provider_keys[provider]:
-        st.warning(f"No API key found for {provider}. Please set the environment variable.")
+    if not os.environ.get("GOOGLE_API_KEY"):
+        st.session_state.llm_instances = None
         return False
-    
+        
     try:
-        # Initialize the requested provider
-        if provider == "google":
-            base_llm = ChatGoogleGenerativeAI(
-                model=MODEL_MAPPING[provider]["default"], 
-                google_api_key=google_api_key, 
-                temperature=DEFAULT_TEMPERATURE
-            )
-        elif provider == "anthropic":
-            base_llm = ChatAnthropic(
-                model=MODEL_MAPPING[provider]["default"],
-                anthropic_api_key=anthropic_api_key,
-                temperature=DEFAULT_TEMPERATURE
-            )
-        elif provider == "cohere":
-            base_llm = ChatCohere(
-                model=MODEL_MAPPING[provider]["default"],
-                api_key=cohere_api_key,
-                temperature=DEFAULT_TEMPERATURE
+        # Create processor LLM instance (with web search if available)
+        if WEB_SEARCH_TOOL_DICT:
+            processor_llm = ChatGoogleGenerativeAI(
+                model="gemini-1.5-pro",
+                tools=[WEB_SEARCH_TOOL_DICT],
+                convert_system_message_to_human=True,
+                temperature=0.2,
             )
         else:
-            st.error(f"Unknown provider: {provider}")
-            return False
+            processor_llm = ChatGoogleGenerativeAI(
+                model="gemini-1.5-pro",
+                convert_system_message_to_human=True,
+                temperature=0.2,
+            )
             
-        llm = base_llm
-        llm_with_search = base_llm.bind_tools(TOOLS_LIST_FOR_BINDING)
-        current_provider = provider
-        print(f"LLM initialized ({provider}: {MODEL_MAPPING[provider]['default']}). Tool binding added.")
+        # Store the LLM instances in session state
+        st.session_state.llm_instances = {
+            'processor_llm': processor_llm,
+        }
         return True
         
-    except Exception as e: 
-        st.error(f"LLM Init Error for {provider}: {e}", icon="🔥")
-        llm = None
-        llm_with_search = None
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"LLM Init Error: {e}")
+        st.session_state.llm_instances = None
         return False
 
-def get_llm_instances() -> Tuple[Optional[Any], Optional[Any]]:
+def get_llm_instances() -> Dict[str, BaseLanguageModel]:
     """
-    Get the current LLM instances
+    Get the initialized LLM instances
+    
+    Returns the cached LLM instances or initializes them if not available.
     
     Returns:
-        Tuple[Optional[Any], Optional[Any]]: Base LLM and LLM with search capabilities
+        Dict[str, BaseLanguageModel]: Dictionary of LLM instances or empty dict if initialization failed
     """
-    return llm, llm_with_search
-
-def get_available_providers() -> Dict[str, bool]:
-    """
-    Get available LLM providers based on environment variables
-    
-    Returns:
-        Dict[str, bool]: Dictionary of providers and their availability
-    """
-    return {
-        "google": bool(os.environ.get("GOOGLE_API_KEY")),
-        "anthropic": bool(os.environ.get("ANTHROPIC_API_KEY")),
-        "cohere": bool(os.environ.get("COHERE_API_KEY"))
-    }
-
-def get_available_models(provider: str) -> list:
-    """
-    Get available models for a specific provider
-    
-    Args:
-        provider: The LLM provider to use ("google", "anthropic", or "cohere")
-        
-    Returns:
-        list: List of available models
-    """
-    if provider in MODEL_MAPPING:
-        return [MODEL_MAPPING[provider]["default"]] + MODEL_MAPPING[provider]["alternatives"]
-    return []
-
-def get_current_provider() -> str:
-    """
-    Get the currently active LLM provider
-    
-    Returns:
-        str: Current provider name
-    """
-    return current_provider
-
-def get_llm_response(prompt: str, use_search: bool = False) -> str:
-    """
-    Get a response from the LLM
-    
-    Args:
-        prompt: The prompt to send to the LLM
-        use_search: Whether to use the LLM with search capabilities
-        
-    Returns:
-        str: The LLM response
-    """
-    model = llm_with_search if use_search else llm
-    
-    if model is None:
-        if not initialize_llm():
-            return "Error: LLM not initialized. Please check your API key."
-        model = llm_with_search if use_search else llm
-    
-    try:
-        response = model.invoke(prompt)
-        return response.content
-    except Exception as e:
-        return f"Error calling LLM: {str(e)}"
+    if not hasattr(st.session_state, 'llm_instances') or not st.session_state.llm_instances:
+        init_success = initialize_llm()
+        if not init_success:
+            return {}
+            
+    return st.session_state.llm_instances or {}

@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Workflow execution logic for the Visual AI Automation Workflow Builder
+
+This module provides the functionality to execute compiled workflow graphs.
+It handles the initializing of workflow state, executing the workflow,
+managing errors, and extracting the final output.
 """
 
 import re
@@ -13,6 +17,13 @@ from src.config.constants import ROUTING_KEY_MARKER
 def execute_workflow(initial_message: str) -> bool:
     """
     Execute the compiled workflow with the provided initial message
+    
+    This function:
+    1. Resets any previous execution state
+    2. Initializes the workflow with the given message
+    3. Executes the workflow graph
+    4. Handles and reports any errors during execution
+    5. Updates the UI with execution status
     
     Args:
         initial_message (str): The initial input message for the workflow
@@ -80,6 +91,9 @@ def get_final_message_content():
     """
     Extract the final message content from the workflow execution state,
     removing any routing markers
+    
+    This function parses the final response content and removes any routing
+    key markers to present a clean output to the user.
     
     Returns:
         str or None: The final message content if available, otherwise None

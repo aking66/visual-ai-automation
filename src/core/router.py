@@ -1,52 +1,43 @@
 # -*- coding: utf-8 -*-
 """
-Routing logic for the Visual AI Automation Workflow Builder
+Router module for the Visual AI Automation Workflow Builder
+
+This module handles the routing logic between nodes in the workflow.
+It determines which node should be executed next based on the current state
+and routing rules defined in the workflow.
 """
 
-import re
 import streamlit as st
 from src.models.state import WorkflowState
-from src.config.constants import ROUTING_KEY_MARKER, DEFAULT_ROUTING_KEY
+from src.core.graph_compiler import get_node_display_name
 
-def generic_router(state: WorkflowState) -> str:
+def route_next_node(state: WorkflowState) -> WorkflowState:
     """
-    Determines the next route based on the routing key in state['last_response_content']
+    Determine the next node to execute in the workflow
+    
+    This function is used as the router node in the LangGraph workflow.
+    It inspects the current state (specifically the current_node_id),
+    logs the routing decision, and returns the state unchanged so that
+    LangGraph can route execution to the appropriate node.
     
     Args:
         state (WorkflowState): The current workflow state
         
     Returns:
-        str: The routing key to determine the next node
+        WorkflowState: The unchanged workflow state (routing is handled by LangGraph)
     """
-    print("\n--- Routing Check ---")
-    routing_key = DEFAULT_ROUTING_KEY  # Default if no key found
-    last_content = state.get("last_response_content", "")
-
-    if last_content:
-        # Ensure last_content is treated as a string
-        if isinstance(last_content, str):
-             match = re.search(rf"{ROUTING_KEY_MARKER}\s*(\w+)\s*$", last_content)
-             if match:
-                 # Key found, use it
-                 routing_key = match.group(1).strip()
-                 print(f"  Extracted key: '{routing_key}'")
-             else:
-                 # String content, but no key found at the end
-                 print(f"  No routing key found in last response: '...{last_content[-50:]}'")
-                 print(f"  -> Using default routing ('{DEFAULT_ROUTING_KEY}').")
-        else:
-             # Content is not a string
-             print(f"  Last response content type is {type(last_content)}, not string.")
-             print(f"  -> Using default routing ('{DEFAULT_ROUTING_KEY}').")
+    # The current_node_id is set by the previous node processor and contains
+    # either a specific routing key or the default routing key
+    next_node_id = state.current_node_id
+    
+    # Get a human-readable name for the next node
+    next_node_name = get_node_display_name(next_node_id)
+    
+    # Log the routing decision
+    if next_node_id == "END":
+        st.session_state.execution_log.append("⏹️ **Routing to: End**")
     else:
-        # No previous response content found in state
-        print(f"  No previous response content found.")
-        print(f"  -> Using default routing ('{DEFAULT_ROUTING_KEY}').")
-
-    # Log and return the determined routing key
-    log_decision_msg = f"🚦 Routing decision: '{routing_key}'"
-    print(f"  -> {log_decision_msg}")
-    if "execution_log" not in st.session_state: 
-        st.session_state.execution_log = []
-    st.session_state.execution_log.append(log_decision_msg)
-    return routing_key
+        st.session_state.execution_log.append(f"➡️ **Routing to: {next_node_name}** (`{next_node_id}`)")
+    
+    # Return state unchanged - LangGraph uses current_node_id for routing
+    return state

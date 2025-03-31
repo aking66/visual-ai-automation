@@ -1,199 +1,160 @@
 # -*- coding: utf-8 -*-
 """
-Graph compilation for the Visual AI Automation Workflow Builder
+Graph compiler module for the Visual AI Automation Workflow Builder
+
+This module is responsible for compiling the workflow nodes defined by the user 
+into a LangGraph execution graph that can be executed with conditional routing.
 """
 
+import uuid
 import streamlit as st
-import traceback
-from langgraph.graph import StateGraph, START, END
+from datetime import datetime
+from typing import Dict, List, Tuple, Any, Optional, Union, Callable
+from langchain_core.language_models.base import BaseLanguageModel
+
+from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage
+
+from langgraph.graph import StateGraph, END
 
 from src.models.state import WorkflowState
-from src.config.constants import DEFAULT_ROUTING_KEY, START_NODE_ID, END_NODE_ID
-from src.core.llm import get_llm_instances
-from src.core.node_processor import create_agent_node_function
-from src.core.router import generic_router
-
-def get_node_display_name(node_id: str) -> str:
-    """
-    Get a display name for a node based on its ID
-    
-    Args:
-        node_id (str): The node ID to get a display name for
-        
-    Returns:
-        str: A human-readable display name for the node
-    """
-    if node_id == START_NODE_ID: 
-        return "⏹️ START"
-    if node_id == END_NODE_ID: 
-        return "🏁 END"
-    
-    if "nodes" in st.session_state and isinstance(st.session_state.nodes, list):
-        for i, node in enumerate(st.session_state.nodes):
-            if isinstance(node, dict) and node.get("id") == node_id: 
-                return f"{i+1}. {node.get('name', f'Unk ({node_id})')}"
-    
-    return f"Unknown ({node_id})"
+from src.core.node_processor import process_node
+from src.core.router import route_next_node
+from src.config.constants import DEFAULT_ROUTING_KEY, ROUTING_KEY_MARKER
 
 def compile_graph() -> bool:
     """
-    Compile the workflow graph based on the nodes in st.session_state.nodes
+    Compile the user-defined workflow nodes into a LangGraph execution graph
+    
+    This function:
+    1. Validates that the nodes are properly configured
+    2. Builds a LangGraph StateGraph with the defined nodes
+    3. Configures routing between nodes based on rules
+    4. Sets the compiled graph in session state for execution
     
     Returns:
         bool: True if compilation was successful, False otherwise
     """
-    llm, _ = get_llm_instances()
+    from src.core.llm import get_llm_instances
     
-    if not llm: 
-        st.error("LLM not initialized.", icon="🔥")
+    if not st.session_state.nodes:
+        st.warning("No nodes to compile.")
         return False
-    
-    if not st.session_state.nodes: 
-        st.warning("No nodes defined.", icon="⚠️")
-        return False
-    
-    print("\n--- Compiling Graph (Dictionary State) ---")
     
     try:
-        # Initialize the graph builder
-        graph_builder = StateGraph(WorkflowState)
+        nodes = st.session_state.nodes
         
-        # Filter valid nodes (with required fields)
-        valid_nodes = [
-            n for n in st.session_state.nodes 
-            if isinstance(n, dict) and all(k in n for k in ["id", "name", "prompt"])
-        ]
-        
-        if not valid_nodes: 
-            st.warning("No valid nodes.", icon="⚠️")
+        # Get a valid processor LLM
+        processor_llm = get_llm_instances().get('processor_llm')
+        if not processor_llm:
+            st.error("Failed to initialize processor LLM.", icon="🔥")
             return False
+            
+        # Initialize the workflow state graph
+        workflow = StateGraph(WorkflowState)
         
-        # Get the set of node IDs and the start node
-        node_ids = {node['id'] for node in valid_nodes}
-        start_node_id_actual = valid_nodes[0]["id"]
+        st.session_state.execution_log = []
+        now = datetime.now()
         
-        print("  Adding Nodes:")
-        possible_keys_per_node = {}
-        
-        # Add nodes to the graph
-        for node_data in valid_nodes:
-            node_id = node_data["id"]
-            node_name = node_data["name"]
-            node_prompt = node_data["prompt"]
-            
-            print(f"    - ID: {node_id}, Name: '{node_name}'")
-            
-            # Extract possible routing keys from routing rules
-            routing_rules = node_data.get("routing_rules", {})
-            cond_keys = {
-                rule.get("output_key", "").strip() 
-                for rule in routing_rules.get("conditional_targets", []) 
-                if rule.get("output_key")
-            }
-            
-            all_keys = cond_keys.union({DEFAULT_ROUTING_KEY, "error"})
-            possible_keys_per_node[node_id] = list(all_keys)
-            
-            # Create the node function and add it to the graph
-            agent_func = create_agent_node_function(
-                node_id, node_name, node_prompt, possible_keys_per_node[node_id]
-            )
-            graph_builder.add_node(node_id, agent_func)
-        
-        # Add edges to the graph
-        print("  Adding Edges:")
-        # Add the edge from START to the first node
-        graph_builder.add_edge(START, start_node_id_actual)
-        print(f"    - START -> {get_node_display_name(start_node_id_actual)}")
-        
-        all_targets_valid = True
-        
-        for node_data in valid_nodes:
-            node_id = node_data["id"]
-            node_name = node_data["name"]
-            
-            routing_rules = node_data.get("routing_rules", {})
-            default_target = routing_rules.get("default_target", END_NODE_ID)
-            conditional_targets = routing_rules.get("conditional_targets", [])
-            
-            path_map = {}
-            print(f"    - Edges from '{node_name}' ({node_id}):")
-            seen_keys_for_node = set()
-            node_targets_valid = True
-            
-            # Process conditional targets
-            for rule_idx, rule in enumerate(conditional_targets):
-                key = rule.get("output_key", "").strip()
-                target_id = rule.get("target_node_id")
+        # Add processing nodes to the graph
+        for node in nodes:
+            if isinstance(node, dict) and 'id' in node and 'name' in node:
+                node_id = node['id']
                 
-                if key and target_id:
-                    # Validate that target exists
-                    if target_id != END_NODE_ID and target_id not in node_ids:
-                        st.error(
-                            f"❌ Invalid Target: {node_name} '{key}'->'{get_node_display_name(target_id)}'", 
-                            icon="🔥"
-                        )
-                        all_targets_valid = False
-                        node_targets_valid = False
-                        continue
-                    
-                    # Check for duplicate keys
-                    if key in seen_keys_for_node:
-                        st.warning(f"⚠️ Duplicate key '{key}' in '{node_name}'.", icon="⚠️")
-                    
-                    # Add the routing rule
-                    path_map[key] = target_id
-                    seen_keys_for_node.add(key)
-                    print(f"      - If key '{key}' -> {get_node_display_name(target_id)}")
+                # Create node function with processor_llm
+                node_fn = lambda state, node_data=node, llm=processor_llm: process_node(
+                    state, node_data, llm
+                )
                 
-                elif key or target_id:
-                    st.warning(f"Node '{node_name}' incomplete rule #{rule_idx+1}. Ignored.", icon="⚠️")
-            
-            # Add default routing if not overridden by a conditional rule
-            if DEFAULT_ROUTING_KEY not in path_map:
-                # Validate default target
-                if default_target != END_NODE_ID and default_target not in node_ids:
-                    st.error(
-                        f"❌ Invalid Default Target: {node_name}->'{get_node_display_name(default_target)}'", 
-                        icon="🔥"
-                    )
-                    all_targets_valid = False
-                    node_targets_valid = False
+                # Add node to graph
+                workflow.add_node(node_id, node_fn)
+        
+        # Add router to determine the next node
+        workflow.add_node("router", route_next_node)
+        
+        # Add edges between nodes
+        for node in nodes:
+            if isinstance(node, dict) and 'id' in node:
+                # Connect node to router
+                workflow.add_edge(node['id'], "router")
+                
+                # Get routing rules
+                routing_rules = node.get('routing_rules', {})
+                
+                if not isinstance(routing_rules, dict):
+                    routing_rules = {}
+                    
+                # Process conditional targets
+                conditional_targets = routing_rules.get('conditional_targets', [])
+                
+                if not isinstance(conditional_targets, list):
+                    conditional_targets = []
+                
+                # Connect router to all possible next nodes based on conditions
+                for rule in conditional_targets:
+                    if isinstance(rule, dict):
+                        output_key = rule.get('output_key', '').strip()
+                        target_node_id = rule.get('target_node_id')
+                        
+                        if output_key and target_node_id:
+                            # Add conditional edge from router to target node
+                            workflow.add_conditional_edges(
+                                "router",
+                                lambda state, key=output_key, graph=workflow: state.current_node_id == key,
+                                {key: target_node_id for key in [output_key]}
+                            )
+                            
+                # Add default route
+                default_target = routing_rules.get('default_target', "END")
+                
+                if default_target == "END":
+                    workflow.add_edge("router", END)
                 else:
-                    path_map[DEFAULT_ROUTING_KEY] = default_target
-                    print(f"      - If key '{DEFAULT_ROUTING_KEY}' -> {get_node_display_name(default_target)}")
-            
-            # Add implicit error route to END
-            if "error" not in path_map:
-                path_map["error"] = END_NODE_ID
-                print(f"      - If key 'error' -> {get_node_display_name(END_NODE_ID)} (Implicit)")
-            
-            # Add conditional edges for this node
-            if node_targets_valid:
-                graph_builder.add_conditional_edges(node_id, generic_router, path_map)
-            else:
-                print(f"      -> Skipping edges for '{node_name}'.")
+                    # Create default conditional edge
+                    workflow.add_conditional_edges(
+                        "router",
+                        lambda state, node_id=node['id']: state.current_node_id == DEFAULT_ROUTING_KEY,
+                        {DEFAULT_ROUTING_KEY: default_target}
+                    )
         
-        # Stop compilation if any targets are invalid
-        if not all_targets_valid:
-            st.error("Compilation failed.", icon="🔥")
-            return False
+        # Set the entry point as the first node
+        if nodes and isinstance(nodes[0], dict):
+            entrypoint_id = nodes[0].get('id')
+            workflow.set_entry_point(entrypoint_id)
         
-        # Set recursion limit based on graph size
-        recursion_limit = len(valid_nodes) * 3 + 10
-        print(f"  Setting recursion limit to: {recursion_limit}")
+        # Compile the workflow
+        compiled_graph = workflow.compile()
         
-        # Compile the graph
-        st.session_state.compiled_graph = graph_builder.compile(checkpointer=None)
-        st.session_state.recursion_limit = recursion_limit
+        # Store the compiled graph in session state
+        st.session_state.compiled_graph = compiled_graph
+        st.session_state.compile_timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
         
-        print("✅ Graph compiled successfully!")
-        st.toast("Workflow compiled!", icon="✅")
+        st.success("Workflow compiled successfully!", icon="✅")
         return True
-    
+        
     except Exception as e:
-        st.error(f"Compile error: {e}", icon="🔥")
-        print(f"❌ Compile Error: {e}")
+        import traceback
         traceback.print_exc()
-        st.session_state.compiled_graph = None
+        st.error(f"Compile failed: {e}", icon="🔥")
         return False
+
+def get_node_display_name(node_id: str) -> str:
+    """
+    Get a human-readable display name for a node
+    
+    Args:
+        node_id (str): The ID of the node
+        
+    Returns:
+        str: The display name for the node, or "End" for the end node,
+             or the node ID if no name is defined
+    """
+    if node_id == "END":
+        return "End"
+    
+    for node in st.session_state.nodes:
+        if isinstance(node, dict) and node.get('id') == node_id:
+            return node.get('name', node_id)
+    
+    return node_id
