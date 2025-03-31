@@ -1,6 +1,8 @@
 # Visual AI Automation Workflow Builder
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-1.1.0--alpha.1-orange)](https://github.com/yourusername/visual-ai-automation)
+[![Tests](https://github.com/yourusername/visual-ai-automation/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/yourusername/visual-ai-automation/actions)
 
 ## 🤖 نظرة عامة
 
@@ -39,23 +41,33 @@ Visual AI Automation Workflow Builder هو تطبيق يتيح إنشاء سير
 - langchain-google-genai
 - google-generativeai
 - streamlit-agraph (لعرض الرسم البياني)
+- **جديد في الإصدار 1.1.0**: دعم لنماذج Anthropic و Cohere
 
 ## ⚙️ التثبيت والإعداد
 
 1. **قم بتثبيت المتطلبات**:
 
 ```bash
-pip install streamlit streamlit-agraph langchain-google-genai google-generativeai langgraph typing-extensions regex langchain-core
+pip install -r requirements.txt
 ```
 
-2. **احصل على مفتاح API من Google**:
-   - سجل للحصول على مفتاح API لنموذج Gemini من [Google AI Studio](https://ai.google.dev/)
-   - قم بإعداد متغير البيئة `GOOGLE_API_KEY` أو أدخله مباشرة في التطبيق
+2. **احصل على مفاتيح API**:
+   - سجل للحصول على مفتاح API لـ Google Gemini من [Google AI Studio](https://ai.google.dev/)
+   - اختياري: للاستفادة من الدعم متعدد النماذج في الإصدار 1.1.0:
+     - سجل للحصول على مفتاح API لـ Anthropic Claude من [Anthropic Console](https://console.anthropic.com/)
+     - سجل للحصول على مفتاح API لـ Cohere من [Cohere Dashboard](https://dashboard.cohere.com/)
+   - قم بنسخ ملف `.env.example` إلى `.env` وأضف مفاتيح API الخاصة بك
 
 3. **قم بتشغيل التطبيق**:
 
 ```bash
 streamlit run run.py
+```
+
+أو استخدم السكريبت المرفق:
+
+```bash
+./start.sh
 ```
 
 ## 🚀 كيفية الاستخدام
@@ -83,6 +95,32 @@ streamlit run run.py
 - **Classify** - تصنيف نية المستخدم واستخراج المعلومات الهامة
 - **Deep Research** - إجراء بحث معمق متعدد الزوايا مع التحقق المتبادل
 - **Advanced Hedge Fund** - تحليل استثماري متقدم مع تحليل الاقتصاد الكلي والقطاعات والشركات
+
+## 🧪 الاختبارات
+
+يحتوي المشروع على مجموعة شاملة من الاختبارات للتحقق من صحة المكونات الأساسية:
+
+```bash
+pytest --cov=src tests/
+```
+
+## 🚀 كيفية تنفيذ نسخة محلية
+
+```bash
+# استنساخ المستودع
+git clone https://github.com/yourusername/visual-ai-automation.git
+cd visual-ai-automation
+
+# تثبيت المتطلبات
+pip install -r requirements.txt
+
+# إعداد ملف البيئة
+cp .env.example .env
+# قم بتحرير ملف .env لإضافة مفاتيح API الخاصة بك
+
+# تشغيل التطبيق
+streamlit run run.py
+```
 
 ## 🤝 المساهمة
 

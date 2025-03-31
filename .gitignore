@@ -1,33 +1,24 @@
 # Environment variables
 .env
 
-# Python
+# Log files
+*.log
+automation_debug.log
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
-*.so
-.Python
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# Virtual Environment
-.venv
+# Virtual environment
+.venv/
 venv/
 ENV/
+
+# Distribution
+dist/
+build/
+*.egg-info/
 
 # IDE specific files
 .idea/
@@ -35,6 +26,5 @@ ENV/
 *.swp
 *.swo
 
-# OS specific files
+# OS specific
 .DS_Store
-Thumbs.db
